@@ -1,0 +1,24 @@
+<?xml version="1.0" standalone='no'?>
+<!--*-nxml-*-->
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+<!--
+  Advertise the CUPS print server over mDNS so phones/laptops (incl. AirPrint
+  on iOS/macOS) discover it automatically. In most modern CUPS+Avahi setups,
+  CUPS' own dnssd backend already advertises shared printers, so this file is
+  often unnecessary. Keep it as a fallback / explicit advert.
+-->
+<service-group>
+  <name replace-wildcards="yes">AirPrint %h</name>
+  <service>
+    <type>_ipp._tcp</type>
+    <subtype>_universal._sub._ipp._tcp</subtype>
+    <port>631</port>
+    <txt-record>txtvers=1</txt-record>
+    <txt-record>qtotal=1</txt-record>
+    <txt-record>rp=printers/PRINTER_QUEUE_NAME</txt-record>
+    <txt-record>note=outpost</txt-record>
+    <txt-record>pdl=application/pdf,image/urf</txt-record>
+    <txt-record>URF=none</txt-record>
+  </service>
+</service-group>

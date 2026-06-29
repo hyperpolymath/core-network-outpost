@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: MPL-2.0
+# systemd variant (for a 64-bit Pi on Raspberry Pi OS/Debian, or the WSL host).
+# Alpine users do NOT need this — use the crond hook instead (see README.md).
+#
+# Edit WorkingDirectory/ExecStart to your checkout path, then:
+#   sudo cp outpost-canary.{service,timer} /etc/systemd/system/
+#   sudo systemctl enable --now outpost-canary.timer
+[Unit]
+Description=outpost: report-only check for AdGuard Home base upgrades / pin drift
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/outpost
+ExecStart=/bin/sh /opt/outpost/bin/canary.sh
+Nice=10

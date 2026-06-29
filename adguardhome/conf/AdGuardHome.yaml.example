@@ -1,0 +1,59 @@
+# SPDX-License-Identifier: MPL-2.0
+#
+# REFERENCE TEMPLATE ONLY — do not deploy this verbatim.
+#
+# AdGuard Home's on-disk schema (schema_version, password hashing, field names)
+# is tied to the exact AGH version. Hand-authoring the full file risks a messy
+# migration on first boot. The robust, reproducible workflow is:
+#
+#   1. First boot with NO config -> AGH serves the setup wizard on :3000.
+#   2. Complete the wizard (admin user, upstreams, listen interface).
+#   3. Copy the generated /opt/adguardhome/conf/AdGuardHome.yaml back into this
+#      repo as adguardhome/conf/AdGuardHome.yaml and COMMIT it.
+#      -> that committed file is now your reproducible source of truth.
+#
+# This template just shows the knobs worth setting. Values you'll care about:
+
+# Web dashboard
+bind_host: 0.0.0.0
+bind_port: 3000          # dashboard; move to 80 later if you like
+
+# Admin login (generate the bcrypt hash; the wizard does this for you):
+#   htpasswd -B -n -b admin 'yourpassword'   # take the part after "admin:"
+users:
+  - name: admin
+    password: "$2y$10$REPLACE_WITH_A_REAL_BCRYPT_HASH"
+
+dns:
+  bind_hosts:
+    - 0.0.0.0
+  port: 53
+  # Encrypted upstreams (DoT). Pick your poison; these are privacy-leaning.
+  upstream_dns:
+    - https://dns.quad9.net/dns-query
+    - tls://1.1.1.1
+  bootstrap_dns:
+    - 9.9.9.10
+    - 1.1.1.1
+  # Only answer for your LAN — never be an open resolver.
+  ratelimit: 20
+  # access control is also enforced by the host firewall (host/nftables.nft).
+
+# Blocklists — the "sinkhole". AdGuard's default list is a sensible baseline;
+# add more from the dashboard (Filters -> DNS blocklists).
+filtering:
+  protection_enabled: true
+  filtering_enabled: true
+
+filters:
+  - enabled: true
+    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt
+    name: AdGuard DNS filter
+    id: 1
+
+# DHCP is OFF by default. Only enable if this box is to be your LAN's DHCP
+# server (then add NET_BIND_SERVICE/ports 67-68 — already in the compose caps).
+dhcp:
+  enabled: false
+
+# schema_version: <set by AGH on first boot — do not guess>

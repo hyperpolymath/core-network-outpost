@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: MPL-2.0
+# images.lock — committed single source of truth for pinned container bases.
+#
+# This file IS version-controlled (unlike .env). The pinned digest below is the
+# reproducible "base" the outpost boots from. It is MAINTAINER-GATED: do not
+# hand-edit the digest — change it only via `bin/bump.sh --apply`, which
+# re-resolves the sha from source and repins after you explicitly confirm.
+#
+# Shell-sourceable (KEY=value). The digest is a MULTI-ARCH manifest-list digest,
+# so it resolves the correct per-arch image automatically (armv7 on a Pi 2B,
+# aarch64 on a Pi 4, etc.) — verified to include linux/arm/v7.
+
+# --- AdGuard Home -------------------------------------------------------------
+AGH_IMAGE_REPO=adguard/adguardhome
+AGH_GH_REPO=AdguardTeam/AdGuardHome
+AGH_VERSION=v0.107.77
+AGH_DIGEST=sha256:e6f2b8bcda06064ab055b44933a4f0e983c35558b9cdb8d2e7ab1efcee36d890
+AGH_IMAGE=adguard/adguardhome@sha256:e6f2b8bcda06064ab055b44933a4f0e983c35558b9cdb8d2e7ab1efcee36d890
+AGH_SOURCE=https://hub.docker.com/r/adguard/adguardhome
+AGH_BUMPED_UTC=2026-06-26

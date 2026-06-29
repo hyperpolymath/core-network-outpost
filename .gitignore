@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: MPL-2.0
+.env
+
+# AdGuard Home runtime state we do NOT want in git (sessions, stats, query log,
+# TLS material). The *config* lives in adguardhome/conf/ and IS committed.
+adguardhome/work/
+adguardhome/conf/AdGuardHome.yaml   # generated on first boot; commit deliberately, see INSTALL.md
+
+*.log
+*.swp

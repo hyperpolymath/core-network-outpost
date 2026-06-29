@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: MPL-2.0
+# Podman/Docker compose for AdGuard Home on the outpost.
+#
+# The base image is digest-pinned in ../images.lock (committed source of truth).
+# Launch via the wrapper so the pin is loaded and the digest guard runs:
+#
+#   sh bin/up.sh
+#
+# (Running compose directly needs AGH_IMAGE exported from images.lock first.)
+#
+# Host networking is used deliberately: AdGuard binds port 53 (DNS), the
+# dashboard, and (optionally) DHCP directly on the Pi's LAN interface. This is
+# the standard, least-fiddly pattern on a single-homed appliance and avoids
+# NAT/port-mapping headaches on armv7.
+
+services:
+  adguardhome:
+    image: ${AGH_IMAGE:?run via "sh bin/up.sh" (loads the pinned digest from images.lock)}
+    container_name: adguardhome
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - TZ=${TZ}
+    volumes:
+      # Committed config = source of truth (see adguardhome/conf/).
+      - ../adguardhome/conf:/opt/adguardhome/conf
+      # Runtime state (stats, query log, sessions) — gitignored.
+      - ../adguardhome/work:/opt/adguardhome/work
+    # Drop privileges except what's needed to bind low ports / handle DHCP.
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE   # bind :53 (and :67/:68 if you enable DHCP)
+      - NET_RAW            # ICMP / DHCP probing
+    healthcheck:
+      test: ["CMD", "/opt/adguardhome/AdGuardHome", "--version"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+
+  # --- OPTIONAL, OFF BY DEFAULT -------------------------------------------------
+  # SSH tarpit. Only enable if you DELIBERATELY expose this box to the internet
+  # (DMZ / port-forward). Move your real sshd off :22 first, then point :22 here.
+  # Uncomment to activate. Tiny (C, single static binary) — fine on armv7.
+  #
+  # endlessh:
+  #   image: ghcr.io/skeeto/endlessh:latest   # TODO: pin to a digest
+  #   container_name: endlessh
+  #   restart: unless-stopped
+  #   ports:
+  #     - "22:2222"        # scanners hang here forever; real sshd lives elsewhere
+  #   command: ["-v"]

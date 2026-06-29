@@ -1,0 +1,6 @@
+#!/bin/sh
+# SPDX-License-Identifier: MPL-2.0
+# Alpine busybox-crond weekly hook. setup.sh installs a copy with __OUTPOST_DIR__
+# substituted into /etc/periodic/weekly/outpost-canary (no file extension — that
+# is required for run-parts to execute it).
+exec sh "__OUTPOST_DIR__/bin/canary.sh"

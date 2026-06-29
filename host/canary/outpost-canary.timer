@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: MPL-2.0
+[Unit]
+Description=Weekly timer for the outpost base-image canary
+
+[Timer]
+OnCalendar=weekly
+Persistent=true
+RandomizedDelaySec=1h
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,16 @@
+# CODEOWNERS — review ownership for the outpost.
+# GitHub honors this file in .github/, repo root, or docs/ only.
+# SPDX-License-Identifier: CC-BY-SA-4.0
+
+# Default: the maintainer owns everything.
+*                       @hyperpolymath
+
+# Supply-chain-sensitive surfaces — the pinned base and the tooling that repins
+# it. Changes here are maintainer-gated by policy (see GOVERNANCE.md) as well as
+# by review.
+/images.lock            @hyperpolymath
+/bin/                   @hyperpolymath
+/compose/               @hyperpolymath
+
+# Firewall + host bootstrap — changes alter the box's exposed surface.
+/host/                  @hyperpolymath

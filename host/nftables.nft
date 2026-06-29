@@ -1,0 +1,59 @@
+#!/usr/sbin/nft -f
+# SPDX-License-Identifier: MPL-2.0
+#
+# Host firewall for the outpost. This protects the BOX ITSELF — it is not an
+# inline router (the Pi 2B can't be one; see docs/INSTALL.md). Default-deny
+# inbound, allow only the services this appliance offers, and only from the LAN.
+#
+# Install:  cp host/nftables.nft /etc/nftables.nft && rc-service nftables restart
+#
+# EDIT THESE to match your .env:
+define LAN   = 192.168.1.0/24
+define SSHPORT = 22
+
+flush ruleset
+
+table inet filter {
+    chain input {
+        type filter hook input priority 0; policy drop;
+
+        # Loopback + established/related
+        iif "lo" accept
+        ct state established,related accept
+        ct state invalid drop
+
+        # ICMP / ICMPv6 (ping, PMTU, ND) — keep the network healthy
+        ip protocol icmp icmp type { echo-request, destination-unreachable, time-exceeded } accept
+        ip6 nexthdr icmpv6 accept
+
+        # --- Services this outpost offers, LAN-scoped ------------------------
+        # SSH (rate-limited to blunt brute force / scanners)
+        ip saddr $LAN tcp dport $SSHPORT ct state new limit rate 10/minute accept
+
+        # DNS sinkhole (AdGuard Home)
+        ip saddr $LAN udp dport 53 accept
+        ip saddr $LAN tcp dport 53 accept
+
+        # AdGuard Home dashboard
+        ip saddr $LAN tcp dport { 3000, 80 } accept
+
+        # CUPS print server (IPP) + mDNS discovery
+        ip saddr $LAN tcp dport 631 accept
+        ip saddr $LAN udp dport 631 accept
+        udp dport 5353 accept            # mDNS/Avahi (multicast, link-local)
+
+        # DHCP server — ONLY if AdGuard or dnsmasq hands out leases. Off by default.
+        # udp dport { 67, 68 } accept
+
+        # Everything else inbound: dropped by policy.
+    }
+
+    chain forward {
+        # Not a router. No forwarding.
+        type filter hook forward priority 0; policy drop;
+    }
+
+    chain output {
+        type filter hook output priority 0; policy accept;
+    }
+}
