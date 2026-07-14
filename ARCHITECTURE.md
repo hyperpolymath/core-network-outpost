@@ -38,6 +38,7 @@ firewall".
 | Host bootstrap | `host/setup.sh` | idempotent Alpine provisioning |
 | Firewall | `host/nftables.nft` | host nftables ruleset |
 | Print server | `host/cups/cupsd.conf`, `host/avahi/airprint.service` | host CUPS + mDNS |
+| Dynamic DNS | `host/ddns/` | host script + crond (15min); announces only on IP change |
 | Local overrides | `.env` (from `.env.example`) | TZ, LAN subnet, SSH port; **not** committed |
 | Future intent | `roadmap/` | sketches only — not built |
 
@@ -81,3 +82,32 @@ Wolfi becomes possible — see `roadmap/PI4-AND-BEYOND.md`.
 - Not a NAS / media server / VPN concentrator — 1 GB RAM + USB-bus NIC ceiling.
 - The micropatch server (`roadmap/MICROPATCH-SERVER.md`) is explicitly **future**
   and needs better hardware; it is not part of the running system.
+
+## Dynamic DNS
+
+`host/ddns/ddns-update.sh` keeps a stable hostname pointed at a domestic,
+ISP-rotated IP. It speaks the generic **dyndns2** protocol — Dynu is the
+reference endpoint, not a dependency; repoint `DDNS_UPDATE_URL` and nothing else
+changes. It runs from crond every 15 minutes and announces **only on actual IP
+change** (plus a forced refresh every ~25 days, before providers expire an
+unrefreshed record). Its credential is scoped to one DNS record, lives only in
+gitignored `.env`, and is passed to curl on stdin — never argv, which `ps` would
+expose. No firewall change is needed: the nftables `output` chain is
+`policy accept`, and this adds no inbound surface.
+
+Note that DDNS makes the box **nameable**, not **reachable** — reaching it still
+requires a port-forward, which this project neither asks for nor wants.
+
+## Why BoJ is not here
+
+The estate's BoJ MCP server cannot run on a 2B: its container base
+(`cgr.dev/chainguard/node`, Wolfi) publishes **only** `linux/amd64` and
+`linux/arm64` — no `armv7`. This is the *same* 32-bit-ARM wall that already
+disqualified Wolfi as the base OS, re-entering through a dependency.
+
+There is also a security-gradient argument that holds even on hardware where BoJ
+*does* fit: BoJ holds broadly-scoped credentials, while the outpost is
+deliberately the most widely-exposed box on the LAN (every device talks to the
+sinkhole). Credentials belong on the control plane, not here. Full reasoning,
+including the one experiment that is still worth running on a 2B:
+[`roadmap/BOJ-ON-OUTPOST.md`](roadmap/BOJ-ON-OUTPOST.md).
