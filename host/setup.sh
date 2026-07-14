@@ -99,6 +99,24 @@ rc-service crond start 2>/dev/null || rc-service crond restart || true
 echo "   (optional) create /etc/outpost/canary.env to enable push notifications —"
 echo "   see host/canary/README.md"
 
+
+# ---------------------------------------------------------------------------
+# 7. Dynamic DNS (optional; only if DDNS_ENABLED=true in .env)
+# ---------------------------------------------------------------------------
+if [ -f .env ] && grep -qE '^DDNS_ENABLED=(true|yes|1)' .env; then
+  echo ">> installing DDNS updater (every 15 min; announces only on IP change)"
+  sed "s|__OUTPOST_DIR__|$REPO_DIR|" host/ddns/outpost-ddns.in \
+    > /etc/periodic/15min/outpost-ddns
+  chmod +x /etc/periodic/15min/outpost-ddns
+  rc-update add crond 2>/dev/null || true
+  rc-service crond start 2>/dev/null || rc-service crond restart || true
+  # Announce once now so the record is correct immediately, rather than waiting
+  # up to 15 minutes for the first cron tick.
+  sh host/ddns/ddns-update.sh --force || echo "!! first DDNS announce failed — check 'sh host/ddns/ddns-update.sh --status'"
+else
+  echo ">> DDNS not enabled (set DDNS_ENABLED=true in .env to turn it on) — skipping"
+fi
+
 echo
 echo ">> done."
 echo "   AdGuard first-run wizard: http://<pi-ip>:3000"

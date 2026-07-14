@@ -11,6 +11,8 @@ It does three honest jobs and refuses to pretend to do a fourth:
 | 🕳️ **DNS sinkhole** | AdGuard Home, containerised | ✅ ideal fit |
 | 🖨️ **Print server** | CUPS + Avahi on the host (wired Pi, serves Wi-Fi clients via the router) | ✅ realistic |
 | 🧱 **Host firewall** | `nftables` protecting the box itself | ✅ realistic |
+| 🏷️ **Stable name** | Dynamic DNS (dyndns2; Dynu as the example) | ✅ realistic |
+| ~~🤖 BoJ MCP server~~ | the estate control plane | ❌ **not on a 2B** — its container base publishes no armv7. See `roadmap/BOJ-ON-OUTPOST.md`. |
 | ~~🚧 Inline "hardware firewall"~~ | true edge router between WAN and LAN | ❌ **not on a 2B** — one NIC, on the USB 2.0 bus. See `docs/INSTALL.md` § "Why no inline firewall". |
 
 ## Why this stack

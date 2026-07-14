@@ -1,0 +1,6 @@
+#!/bin/sh
+# SPDX-License-Identifier: MPL-2.0
+# Alpine busybox-crond 15-minute hook. setup.sh installs a copy with
+# __OUTPOST_DIR__ substituted into /etc/periodic/15min/outpost-ddns (no file
+# extension — run-parts requires that).
+exec sh "__OUTPOST_DIR__/host/ddns/ddns-update.sh"
