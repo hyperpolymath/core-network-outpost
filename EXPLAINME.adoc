@@ -1,0 +1,58 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2025-2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= EXPLAINME — core-network-outpost, in plain terms
+:toc: preamble
+
+*What is this?* A small, low-power box that quietly makes your home network faster,
+safer, and more private — and that you can actually *understand, rebuild, and repair*.
+
+== The problem it solves
+
+Your home network runs on a box your ISP handed you: you don't control it, can't
+inspect it, and can't fix it. So when the line stutters under load (a video call
+breaks up while something uploads), or every device is fed ads and trackers, or you
+want a stable name and your own web presence — you're stuck with what you were given.
+
+Commercial "network security boxes" (eBlocker, Bitdefender BOX, ...) tried to help,
+then *shut down* and left their buyers stranded. A box you can't rebuild is a box
+that can be taken away from you.
+
+== What it does
+
+* *Blocks ads, trackers, and malware domains* for every device (AdGuard Home).
+* *Kills bufferbloat* — keeps ping and jitter low even when the line is busy (CAKE
+  smart-queue shaping), so calls and games stay smooth.
+* *Keeps accurate, authenticated time* (chrony) — quietly load-bearing for security.
+* *A firewall that says "no" by default*, and can go *dark* (services invisible until
+  you knock).
+* *A stable name* for your connection (dynamic DNS), and — optionally — *your own
+  independent web page* and properly-authenticated email DNS.
+
+== Why it's built the way it is
+
+. *Dependability first.* If security isn't dependable it's dangerous; if the box
+  isn't dependable you'll ditch it and lose everything it gave you. So it is boring,
+  reproducible, and self-healing *on purpose*.
+. *Never a juggernaut.* It splits into two single-minded boxes — a boring, always-on
+  *Core* that just works, and an optional, exciting *Frontier* for experimental bits —
+  so one failure or breach can't take the whole thing down.
+. *You're not alone.* It's one layer among many (your router, your devices, Cloudflare,
+  the community), so it stays light and doesn't try to do everything.
+. *Reproducible + yours.* Everything is config-as-code in git, pinned and verifiable.
+  No vendor to shut down; rebuild on new hardware in an afternoon.
+. *Efficient + accessible.* Runs on ~10 W and reuses hardware you already own — speed
+  and security without a power-hungry box or a top-end chip.
+
+== Who it's for
+
+* *Anyone* wanting a faster, cleaner, more private home network — start with the *Core*
+  on almost any spare device.
+* *IndieWebbers* who want to own their web presence — see the wiki's IndieWeb track.
+* *Developers / platform maintainers* who want the whole estate — the *Frontier* and
+  its modules; see the maintainer track.
+
+== Where next
+
+* `README.md` — the map. `ARCHITECTURE.md` — how the pieces fit + an honest fragility read.
+* `legacy-devices-readme.adoc` — running it on old boards (Pi 2B & friends).
+* The *wiki* — step-by-step help, organised by audience (see `DOCS-MAP.adoc`).

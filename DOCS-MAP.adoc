@@ -1,0 +1,53 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2025-2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= Documentation map
+
+Where everything lives, and the plan for the wiki (three audiences). Legend:
+✅ done · ⚠️ needs an update · ▢ planned.
+
+== In the repo (reference + reproducible truth)
+
+[cols="2,3,1"]
+|===
+|Doc |For |Status
+
+|`README.md` |everyone — the map |✅
+|`EXPLAINME.adoc` |the interested newcomer |✅
+|`ARCHITECTURE.md` |how it fits + honest fragility read |⚠️ replace old Pi-only version with the estate one (keep the pin/bump design)
+|`HARDWARE.md` |right-size to your line |✅ (in design staging → graduate)
+|`HARDENING.md` |security + observability architecture (§0–10) |✅ (staging → graduate)
+|`PROFILES.md` |builds, release channels, feature scope |✅ (staging → graduate)
+|`mail-auth.md` |optional mail-DNS module |✅ (staging → graduate)
+|`dependability/` |shippable dependability-first configs |✅ (staging → graduate)
+|`legacy-devices-readme.adoc` |Pi 2B / old boards, honestly |✅
+|`docs/INSTALL.md`, `roadmap/`, `.github/` |install, futures, governance |✅ existing
+|===
+
+NOTE: several docs live in the design staging area (`llm-coding-configs/claude/pi-edge-shaper/`)
+and graduate into this repo — see task #8.
+
+== The wiki — three tracks
+
+=== 👤 Users (support)  — plain-language, task-first
+* Getting started: the *Core* on a spare device ▢
+* Right-size to your line (2.5GbE only for gigabit+) ▢
+* Troubleshooting + the one-button *diagnostic-bundle* export ▢
+* *"Your site's been hijacked — recover, in order"* (incident response) ▢
+* Reputation hygiene: Safe Browsing / SmartScreen; staying off blocklists ▢
+
+=== 🕸️ IndieWebbers (the special extra)
+* Make your page with *Ddraig* (accessible, WCAG-AAA-capable, no Node) ▢
+* Publish to Cloudflare Pages — free, likely green-hosted ▢
+* Your own domain + mail-DNS done right (SPF/DKIM/DMARC via the module) ▢
+* `security.txt`, sitemap, Search Console — being findable *and* trusted ▢
+
+=== 🛠️ Developers / platform maintainers (incl. Frontier)
+* The two-box estate, release channels (`main`/`alpha`), and *modules* ▢
+* Frontier: SPA/SDP, the ODoH pool, the bastion, full observability ▢
+* *Bustfiles* + `network-ambulance` — recovery-as-code ▢
+* Making the box legible to your own LLM (the diagnostic bundle, `0-AI-MANIFEST`) ▢
+* Contributing · governance · the pin/bump flow · OpenSSF ▢
+
+== Fill order (suggested)
+Users track first (getting-started + the IR page), then IndieWeb (Ddraig + publish),
+then maintainer (Frontier modules). One page at a time, reviewed as we go.
