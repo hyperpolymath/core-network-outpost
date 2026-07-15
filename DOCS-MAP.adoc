@@ -13,18 +13,20 @@ Where everything lives, and the plan for the wiki (three audiences). Legend:
 
 |`README.md` |everyone — the map |✅
 |`EXPLAINME.adoc` |the interested newcomer |✅
-|`ARCHITECTURE.md` |how it fits + honest fragility read |⚠️ replace old Pi-only version with the estate one (keep the pin/bump design)
-|`HARDWARE.md` |right-size to your line |✅ (in design staging → graduate)
-|`HARDENING.md` |security + observability architecture (§0–10) |✅ (staging → graduate)
-|`PROFILES.md` |builds, release channels, feature scope |✅ (staging → graduate)
-|`mail-auth.md` |optional mail-DNS module |✅ (staging → graduate)
-|`dependability/` |shippable dependability-first configs |✅ (staging → graduate)
+|`ARCHITECTURE.md` |how it fits + honest fragility read |✅ estate version (topology + fragility)
+|`DESIGN-LOG.adoc` |~40 decisions, rationale + key learnings |✅
+|`HARDENING.md` |security + observability architecture (§0–10) |✅
+|`PROFILES.md` |builds, release channels, feature scope |✅
+|`HARDWARE.md` |right-size to your line |✅
+|`mail-auth.md` |optional mail-DNS module |✅
+|`dependability/` |dependability-first configs (chrony, watchdog, RO-root, healthcheck) |✅
+|`edge-shaper/` |inline CAKE shaper configs — deploy on the N100 |✅
 |`legacy-devices-readme.adoc` |Pi 2B / old boards, honestly |✅
 |`docs/INSTALL.md`, `roadmap/`, `.github/` |install, futures, governance |✅ existing
 |===
 
-NOTE: several docs live in the design staging area (`llm-coding-configs/claude/pi-edge-shaper/`)
-and graduate into this repo — see task #8.
+NOTE: the design-staging phase is complete — all docs and the `edge-shaper/` configs now live in
+this repo. The standalone `edge-shaper` repo was folded in here and archived.
 
 == The wiki — three tracks
 
