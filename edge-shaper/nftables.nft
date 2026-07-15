@@ -1,0 +1,63 @@
+#!/usr/sbin/nft -f
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2025-2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+#
+# Inline edge router: NAT + stateful firewall for the Pi 4/5 shaper.
+# Default-deny input (matching the outpost's host firewall philosophy),
+# LAN->WAN forwarding, masquerade on WAN. Review before loading.
+#
+# EDIT the two `define`s to match your .env (WAN_IF / LAN_IF).
+
+define WAN = "enp1s0"
+define LAN = "enp2s0"
+
+flush ruleset
+
+table inet filter {
+    chain input {
+        type filter hook input priority filter; policy drop;
+
+        iif "lo" accept
+        ct state established,related accept
+        ct state invalid drop
+
+        # ICMP/ICMPv6 (needed for PMTUD & basic diagnostics)
+        meta l4proto { icmp, icmpv6 } accept
+
+        # Services the router offers to the LAN only: SSH, DNS, DHCP
+        iifname $LAN tcp dport 22 accept
+        iifname $LAN udp dport 53 accept
+        iifname $LAN tcp dport 53 accept
+        iifname $LAN udp dport { 67, 68 } accept
+
+        # everything else (incl. anything arriving from WAN) is dropped by policy
+    }
+
+    chain forward {
+        type filter hook forward priority filter; policy drop;
+
+        ct state established,related accept
+        ct state invalid drop
+
+        # LAN can reach the internet; WAN cannot initiate into the LAN
+        iifname $LAN oifname $WAN accept
+
+        # Clamp TCP MSS to path MTU (important behind PPPoE/modem-mode links)
+        tcp flags syn tcp option maxseg size set rt mtu
+    }
+
+    chain output {
+        type filter hook output priority filter; policy accept;
+    }
+}
+
+table ip nat {
+    chain postrouting {
+        type nat hook postrouting priority srcnat; policy accept;
+        oifname $WAN masquerade
+    }
+}
+
+# If you route IPv6 (Virgin hands out a /56 via DHCPv6-PD), you typically do
+# NOT masquerade v6 — you route a delegated prefix and firewall it in the
+# inet forward chain above. Left as a follow-up once the v4 path is verified.

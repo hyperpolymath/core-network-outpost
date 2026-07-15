@@ -1,113 +1,77 @@
 <!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
-# Architecture
-
-A map of `outpost` for someone changing it. For *why* the choices were made and
-how to install, see [README.md](README.md) and [docs/INSTALL.md](docs/INSTALL.md).
-
-## What this is
-
-A single-board network appliance for a **Raspberry Pi 2B** (ARMv7 / 1 GB RAM /
-100 Mbit Ethernet on the USB 2.0 bus / no Wi-Fi). It does three jobs:
-
-1. **DNS sinkhole** — AdGuard Home, in a container.
-2. **Print server** — CUPS + Avahi, on the host.
-3. **Host firewall** — nftables, protecting the box itself.
-
-It is **not** an inline edge firewall/router — the 2B has one NIC on a shared
-USB bus and the appliance router OSes are x86-only. See README § "Why no inline
-firewall".
-
-## Component map
+<!-- SPDX-FileCopyrightText: 2025-2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk> -->
+# Architecture + an honest fragility read
 
 ```
-                         ┌─────────────────────────── Raspberry Pi 2B (Alpine, armv7) ──┐
-   LAN clients ──DNS───▶ │  AdGuard Home  (container, Podman, host-net)                  │
-   LAN clients ──IPP───▶ │  CUPS + Avahi  (host services)  ── USB ──▶ printer            │
-                         │  nftables      (host firewall, default-deny, LAN-scoped)      │
-                         └──────────────────────────────────────────────────────────────┘
+                          INTERNET
+                             │
+                    ┌────────┴────────┐
+                    │  Virgin Hub     │   Modem Mode (dumb bridge)
+                    └────────┬────────┘
+                             │ WAN
+        ╔════════════════════╪════════════════════════════╗
+        ║  🔴 CORE — inline, CRITICAL PATH, dark           ║
+        ║     (N100 gateway; MUST fail-open + watchdog)    ║
+        ║   nftables(default-deny) · CAKE(SQM)             ║
+        ║   AdGuard(DNS+graceful fallback) · chrony(NTP)   ║
+        ║   SPA/SDP gate · DDNS · node_exporter            ║
+        ╚════════════════════╪════════════════════════════╝
+                             │ LAN
+                    ┌────────┴────────┐
+                    │   LAN switch    │────────► clients
+                    └───┬─────────┬───┘
+        🟡 FRONTIER ....│         │.... 🟢 Pi 2B
+   ┌────────────────────┴───┐  ┌──┴───────────────┐
+   │ isolated box (N100/VM) │  │ retired → backup │
+   │  setup UI · mail-auth  │  │ DNS sinkhole     │
+   │  DMARC · dev bastion   │  └──────────────────┘
+   │  ODoH · hardened Bandit│
+   │  Prometheus·Loki·Phoenix│   (scrapes Core's exporter)
+   └────────────────────────┘
+        │ compromise/failure here CANNOT reach Core │
+
+        🟢 OFF-BOX — someone else runs it, free, ~zero fragility
+   ┌──────────────────────────────────────────────────────┐
+   │ Cloudflare DNS zone + DNSSEC  │ Pages: IndieWeb +     │
+   │ (mail-auth records published) │ .well-known (static)  │
+   └──────────────────────────────────────────────────────┘
 ```
 
-| Concern | Lives in | Runtime |
-|---------|----------|---------|
-| Sinkhole service | `compose/adguardhome.yaml` | container (Podman, `network_mode: host`) |
-| Sinkhole config | `adguardhome/conf/AdGuardHome.yaml` | committed source of truth (captured after first-boot wizard) |
-| Pinned base image | `images.lock` | committed; multi-arch `@sha256` digest |
-| Launch wrapper | `bin/up.sh` | sources the pin; refuses un-pinned tags |
-| Bump tooling | `bin/bump.sh` | maintainer-gated repin from source |
-| Canary (report-only) | `bin/canary.sh`, `host/canary/` | weekly check/verify on owned compute; notifies, never applies |
-| Host bootstrap | `host/setup.sh` | idempotent Alpine provisioning |
-| Firewall | `host/nftables.nft` | host nftables ruleset |
-| Print server | `host/cups/cupsd.conf`, `host/avahi/airprint.service` | host CUPS + mDNS |
-| Dynamic DNS | `host/ddns/` | host script + crond (15min); announces only on IP change |
-| Local overrides | `.env` (from `.env.example`) | TZ, LAN subnet, SSH port; **not** committed |
-| Future intent | `roadmap/` | sketches only — not built |
+## Fragility scorecard (honest, not reassuring)
+- 🟢 **Off-box (Cloudflare/Pages):** near-zero. Someone else runs it. Best call in the design.
+- 🟢 **Core as a *sidecar* (2B: sinkhole/firewall/time/monitor):** low — boring, mature,
+  single-purpose daemons + read-only-root + watchdog. Genuinely safe.
+- 🔴 **Core as the *inline router+shaper* (in the WAN path):** THIS is the real fragility, and
+  the worry is correct. It's a single point of failure for *all connectivity* — hang or misconfig
+  and the whole house loses internet, not just ads. You can't make an in-path router "inherently
+  safe" (it's in the path). You make it **fail-safe**, three ways:
+    1. **Fail-open** — if CAKE/nftables/the box dies, traffic *passes* (unshaped/unfiltered), never blocked.
+    2. **Watchdog** — auto-reboot a hang.
+    3. **Strippable** — pull it, put the Hub back in ~60s. A physical bypass path always exists.
+  Those three — not "never fails" — are the answer.
+- 🟡 **Frontier (mail/bastion/ODoH/dashboard):** medium complexity, but *isolated* → its failure is
+  a feature-outage, never a network-outage. The real cost is **maintenance burden** (solo), not
+  fragility. Keep it optional, off by default.
+- 🟡 **Extra interfaces:** each NIC/overlay (WAN/LAN/mgmt, ZeroTier, bastion, ODoH) = added surface +
+  a failure mode. Instinct correct. Discipline: **minimise interfaces on Core; concentrate them on
+  Frontier**, where failure is contained.
 
-## Why containers for DNS but host for printing
+## Is it crazy? No — *if* you hold the layering
+The two-box + off-box split is precisely what stops it being a juggernaut. It only turns crazy if
+(a) you collapse it back into one box, or (b) you let the inline router fail-*closed*. The craziness
+is bounded by isolation. The **one thing that genuinely deserves your worry is the inline-router
+criticality** — everything else the architecture already tames.
 
-AdGuard Home is a single self-contained service with one YAML state file → a
-clean, digest-pinned container is the most reproducible packaging. CUPS needs
-USB device passthrough and host mDNS to do AirPrint cleanly; on a 1 GB armv7 box
-that is far less fiddly run directly on the host. Pragmatic split, not dogma.
+## Self-healing + recovery ("Bustfiles") — the right instinct; you own half the tooling
+Already designed: watchdog · AdGuard healthcheck+restart · config-validate-before-apply ·
+read-only-root revert · graceful DNS fallback. **Add the big one: fail-open on the inline router.**
 
-## The pin-and-bump flow (the load-bearing design)
+Recovery-as-code (Bustfiles = Just-style rescue recipes):
+- `just bypass-shaper`   — drop the box out of the WAN path, Hub takes over
+- `just rescue-dns`      — fall back to Cloudflare/router DNS if AdGuard is down
+- `just rebuild-from-pin`— redeploy every container from its committed digest
+- `just break-glass`     — LAN-only SSH that ignores the SPA layer
+- `just verify-all`      — validate every config before it can take a box down
 
-The "stabilised, reproducible environment" property rests here:
-
-```
-  source of truth ........ images.lock  (AGH_IMAGE = repo@sha256:...)
-        │
-        │  sh bin/up.sh        loads pin, guards against floating tags, starts container
-        ▼
-  running container at an immutable digest
-
-  upgrades (maintainer-gated):
-     sh bin/bump.sh --check    report-only; exit 10 if a newer release exists
-     sh bin/bump.sh --verify   re-resolve current pin from source; assert no drift
-     sh bin/bump.sh --apply    re-resolve digest + repin AFTER explicit confirmation
-```
-
-Digests are **manifest-list** digests, so one pin resolves the right per-arch
-image automatically (armv7 today, aarch64 on a Pi 4). Governance for this flow:
-[.github/GOVERNANCE.md](.github/GOVERNANCE.md) § "Policy 1".
-
-## Base OS constraint (don't relitigate without checking arch)
-
-Base is **Alpine (armv7)**. Wolfi was first choice but has **no 32-bit ARM
-target**, so it is impossible on a 2B. On a 64-bit Pi (`uname -m` = `aarch64`)
-Wolfi becomes possible — see `roadmap/PI4-AND-BEYOND.md`.
-
-## Boundaries / non-goals
-
-- Not a router or inline firewall (hardware can't do it credibly).
-- Not a NAS / media server / VPN concentrator — 1 GB RAM + USB-bus NIC ceiling.
-- The micropatch server (`roadmap/MICROPATCH-SERVER.md`) is explicitly **future**
-  and needs better hardware; it is not part of the running system.
-
-## Dynamic DNS
-
-`host/ddns/ddns-update.sh` keeps a stable hostname pointed at a domestic,
-ISP-rotated IP. It speaks the generic **dyndns2** protocol — Dynu is the
-reference endpoint, not a dependency; repoint `DDNS_UPDATE_URL` and nothing else
-changes. It runs from crond every 15 minutes and announces **only on actual IP
-change** (plus a forced refresh every ~25 days, before providers expire an
-unrefreshed record). Its credential is scoped to one DNS record, lives only in
-gitignored `.env`, and is passed to curl on stdin — never argv, which `ps` would
-expose. No firewall change is needed: the nftables `output` chain is
-`policy accept`, and this adds no inbound surface.
-
-Note that DDNS makes the box **nameable**, not **reachable** — reaching it still
-requires a port-forward, which this project neither asks for nor wants.
-
-## Why BoJ is not here
-
-The estate's BoJ MCP server cannot run on a 2B: its container base
-(`cgr.dev/chainguard/node`, Wolfi) publishes **only** `linux/amd64` and
-`linux/arm64` — no `armv7`. This is the *same* 32-bit-ARM wall that already
-disqualified Wolfi as the base OS, re-entering through a dependency.
-
-There is also a security-gradient argument that holds even on hardware where BoJ
-*does* fit: BoJ holds broadly-scoped credentials, while the outpost is
-deliberately the most widely-exposed box on the LAN (every device talks to the
-sinkhole). Credentials belong on the control plane, not here. Full reasoning,
-including the one experiment that is still worth running on a 2B:
-[`roadmap/BOJ-ON-OUTPOST.md`](roadmap/BOJ-ON-OUTPOST.md).
+**`network-ambulance` is literally your recovery tool** (diagnose + safe, reversible repair, already
+in your repos). Point the Bustfiles at it — that's your autofix layer, already started.

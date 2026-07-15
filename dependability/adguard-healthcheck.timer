@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2025-2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+# /etc/systemd/system/adguard-healthcheck.timer
+# Enable:  systemctl enable --now adguard-healthcheck.timer
+[Unit]
+Description=Probe AdGuard DNS liveness every 30s
+
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=30
+AccuracySec=5s
+
+[Install]
+WantedBy=timers.target

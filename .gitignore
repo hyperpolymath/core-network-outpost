@@ -8,3 +8,4 @@ adguardhome/conf/AdGuardHome.yaml   # generated on first boot; commit deliberate
 
 *.log
 *.swp
+edge-shaper/.env
