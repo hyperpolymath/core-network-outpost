@@ -1,5 +1,9 @@
 <!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
-# outpost — a network community outpost on a Raspberry Pi
+# outpost — a network community outpost on an SBC, N100-type (recommeded), or other suitable network device.
+* Functionality is limnited on lower SBC models, example of Pi 2B given, with explanation of absent features.
+
+Note: A community-led list for tested versions exists on this wiki page: [insert]
+Please contribute your experiences here with other devices and I will look at where things might be remediated. 
 
 A small, reproducible home-network appliance built for a **Raspberry Pi 2B**
 (ARMv7 / 32-bit / 1 GB RAM / 100 Mbit Ethernet / no Wi-Fi).
@@ -12,8 +16,15 @@ It does three honest jobs and refuses to pretend to do a fourth:
 | 🖨️ **Print server** | CUPS + Avahi on the host (wired Pi, serves Wi-Fi clients via the router) | ✅ realistic |
 | 🧱 **Host firewall** | `nftables` protecting the box itself | ✅ realistic |
 | 🏷️ **Stable name** | Dynamic DNS (dyndns2; Dynu as the example) | ✅ realistic |
-| ~~🤖 BoJ MCP server~~ | the estate control plane | ❌ **not on a 2B** — its container base publishes no armv7. See `roadmap/BOJ-ON-OUTPOST.md`. |
+| ~~🤖 BoJ MCP server~~ | the estate control plane | available on arm 64bit processors|
+| ~~🤖 BoJ MCP server~~ | the estate control plane | available on arm 64bit processors|
+  | ❌ **not on Pi 2B a 2B** — its container base publishes no armv7. See `roadmap/BOJ-ON-OUTPOST.md`.   
 | ~~🚧 Inline "hardware firewall"~~ | true edge router between WAN and LAN | ❌ **not on a 2B** — one NIC, on the USB 2.0 bus. See `docs/INSTALL.md` § "Why no inline firewall". |
+
+SPECIALIST DEVELOPMENT EXTENSION PROJECTS
+| software defined perimeter (SDP) | "invisibility" behind SDP cloak | 
+| ssh jump server | ...to use with software defined perimeter and dns-over-quic/https/tls (DoQ/DoH - not DoT - bit of a give away!) for better protection for developer work | 
+| Oblibivious DNS (oDNS) stub resolver | requires a community of users maintaining a distributed network, and a few with dedicated servers to operate the authoritative oDNS servers (obviously, not just one of those!). I am and I am just one sad, lonely guy. BUT if you are interested in developing this with me and can recruit people, would love to do it - and I have started the process here to build that further |
 
 ## Why this stack
 
