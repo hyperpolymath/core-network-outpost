@@ -2,11 +2,11 @@
 <!-- SPDX-FileCopyrightText: 2025-2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk> -->
 # edge-shaper — inline CAKE SQM for the Virgin Media edge
 
-**Status: draft config set**, now in its own private repo `edge-shaper` (renamed from
-`pi-edge-shaper` — the shaper runs on the x86 N100, so nothing is Pi-bound). Not yet
-deployed inline; awaiting the N100.
+**Status: draft config set** — the `edge-shaper/` component of the **`core-network-outpost`**
+estate (the shaper runs on the x86 N100, so nothing is Pi-bound). Not yet deployed inline;
+awaiting the N100.
 
-This realises **Rung 2** of `pi-core-network-outpost/roadmap/PI4-AND-BEYOND.md`:
+This realises **Rung 2** of the estate roadmap (`../roadmap/PI4-AND-BEYOND.md`):
 an **x86 N100 mini-PC with dual 2.5GbE (Intel i226-V), inline between the Virgin
 Hub and the LAN**, doing `nftables` NAT/routing + **CAKE** smart-queue shaping.
 
@@ -85,8 +85,7 @@ cake-shaper status                           # verify qdiscs are attached
    the rates 5 % at a time until the under-load latency line is flat (grade **A/A+**).
 4. Leave `link-quality-monitor.sh` running so the setting stays honest for all time.
 
-See the outpost repo's `PI4-AND-BEYOND.md` for the hardware ladder and the
-graceful demotion of the 2B.
+See `../roadmap/PI4-AND-BEYOND.md` for the hardware ladder and the graceful demotion of the 2B.
 
 ## Requirements
 
@@ -105,8 +104,11 @@ graceful demotion of the 2B.
 > config, not yet a hardware-proven appliance.** Rates in `.env` are placeholders.
 
 - **Live link, idle baseline — measured 2026-07-15** on Virgin Media (DOCSIS,
-  `cable.virginm.net`) from a WSL2 client: **~12 ms RTT, <1 ms jitter, 0 % loss**
-  to `1.1.1.1` and `9.9.9.9`. *Idle only — under-load/bufferbloat not yet measured.*
+  `cable.virginm.net`) from a WSL2 client: **~12 ms RTT, <1 ms jitter, 0 % loss** to `1.1.1.1`.
+- **Bufferbloat — measured 2026-07-15 (WSL2 ballpark):** saturating the upstream took latency
+  **12 → 24 ms avg / 56 ms max**, jitter 1.5 → 9.4 ms → **real, moderate bufferbloat (~B/C grade),
+  so CAKE is justified.** (Throughput is unmeasurable from WSL2 — the authoritative down/up for the
+  `.env` rates still needs a wired test.)
 - **Authoring/review env:** WSL2, Debian, kernel `6.18.x-microsoft-standard`,
   `tc`/CAKE present; scripts shellcheck-clean; `nftables.nft` reviewed, not yet loaded.
 - **Not yet deployed** on N100 hardware (pending purchase) or on the Pi outpost.
