@@ -1,13 +1,9 @@
 <!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
-<<<<<<< Updated upstream
-# outpost — a network community outpost on an SBC, N100-type (recommeded), or other suitable network device.
-* Functionality is limnited on lower SBC models, example of Pi 2B given, with explanation of absent features.
-
-Note: A community-led list for tested versions exists on this wiki page: [insert]
-Please contribute your experiences here with other devices and I will look at where things might be remediated. 
-=======
 # core-network-outpost — a reproducible, dependability-first home-network estate
->>>>>>> Stashed changes
+
+> **Tested devices:** a community-led list of tested versions lives on the project wiki
+> (link TBC). Please contribute your experience with other devices and I'll look at where
+> things can be remediated.
 
 A self-hosted network estate that scales from a **single-NIC sidecar on a Raspberry Pi 2B** up to
 an **inline gateway on an x86 N100** — split into **two single-minded boxes by *criticality +
@@ -17,18 +13,6 @@ exposure***, so it never becomes a juggernaut that's always-down or the focus of
 > one NIC on almost anything. Running a Pi 2B or other old board? Its real limits live in
 > **[`legacy-devices-readme.adoc`](./legacy-devices-readme.adoc)**. Hardware guidance: `HARDWARE.md`.
 
-<<<<<<< Updated upstream
-| Role | What it is | Status on a Pi 2B |
-|------|-----------|-------------------|
-| 🕳️ **DNS sinkhole** | AdGuard Home, containerised | ✅ ideal fit |
-| 🖨️ **Print server** | CUPS + Avahi on the host (wired Pi, serves Wi-Fi clients via the router) | ✅ realistic |
-| 🧱 **Host firewall** | `nftables` protecting the box itself | ✅ realistic |
-| 🏷️ **Stable name** | Dynamic DNS (dyndns2; Dynu as the example) | ✅ realistic |
-| ~~🤖 BoJ MCP server~~ | the estate control plane | available on arm 64bit processors|
-| ~~🤖 BoJ MCP server~~ | the estate control plane | available on arm 64bit processors|
-  | ❌ **not on Pi 2B a 2B** — its container base publishes no armv7. See `roadmap/BOJ-ON-OUTPOST.md`.   
-| ~~🚧 Inline "hardware firewall"~~ | true edge router between WAN and LAN | ❌ **not on a 2B** — one NIC, on the USB 2.0 bus. See `docs/INSTALL.md` § "Why no inline firewall". |
-=======
 ## Core — the dark, always-on box (single-minded per its ethos)
 
 Three honest jobs (four with time), and it refuses to pretend to a fifth:
@@ -52,11 +36,10 @@ the Prometheus/Loki/Phoenix dashboard, and a **Ddraig** static site published **
 
 > **Honest caveat:** the Tier-4 / community parts — the ODoH pool especially — only really shine
 > with knowledgeable people running nodes. Treat them as **opt-in frontier, never load-bearing**.
->>>>>>> Stashed changes
 
 SPECIALIST DEVELOPMENT EXTENSION PROJECTS
-| software defined perimeter (SDP) | "invisibility" behind SDP cloak | 
-| ssh jump server | ...to use with software defined perimeter and dns-over-quic/https/tls (DoQ/DoH - not DoT - bit of a give away!) for better protection for developer work | 
+| software defined perimeter (SDP) | "invisibility" behind SDP cloak |
+| ssh jump server | ...to use with software defined perimeter and dns-over-quic/https/tls (DoQ/DoH - not DoT - bit of a give away!) for better protection for developer work |
 | Oblibivious DNS (oDNS) stub resolver | requires a community of users maintaining a distributed network, and a few with dedicated servers to operate the authoritative oDNS servers (obviously, not just one of those!). I am and I am just one sad, lonely guy. BUT if you are interested in developing this with me and can recruit people, would love to do it - and I have started the process here to build that further |
 
 ## Why this stack
