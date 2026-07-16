@@ -2,7 +2,7 @@
 <!-- SPDX-FileCopyrightText: 2025-2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk> -->
 # Dependability tier — shippable now, works on the 2B today [dep+]
 
-The reliability-first layer from `../HARDENING.md` §0 & §6, as real config. All of it
+The reliability-first layer from `docs/HARDENING.md` §0 & §6, as real config. All of it
 runs on the current Pi 2B **before any N100 hardware**. Ordered by value.
 
 | File | What it gives you | Runtime |

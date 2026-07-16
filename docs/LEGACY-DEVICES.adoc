@@ -45,5 +45,5 @@ single NIC). That is the point: a single-minded box that just works and never be
 
 When you outgrow it, the ladder — **Pi 4/5 (aarch64) → x86 N100** — is in
 `roadmap/PI4-AND-BEYOND.md`. On 64-bit, **Wolfi** becomes possible and the **inline gateway +
-Frontier** roles open up. Match the hardware to your line speed (`HARDWARE.md`); 2.5GbE is only
+Frontier** roles open up. Match the hardware to your line speed (`docs/HARDWARE.md`); 2.5GbE is only
 for gigabit+ inline shaping, not a baseline.

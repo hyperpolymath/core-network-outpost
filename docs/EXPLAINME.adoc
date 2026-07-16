@@ -53,6 +53,7 @@ that can be taken away from you.
 
 == Where next
 
-* `README.md` — the map. `ARCHITECTURE.md` — how the pieces fit + an honest fragility read.
-* `legacy-devices-readme.adoc` — running it on old boards (Pi 2B & friends).
-* The *wiki* — step-by-step help, organised by audience (see `DOCS-MAP.adoc`).
+* `README.md` — the map. `docs/ARCHITECTURE.md` — how the pieces fit + an honest fragility read.
+* `docs/LEGACY-DEVICES.adoc` — running it on old boards (Pi 2B & friends).
+* The https://github.com/hyperpolymath/core-network-outpost/wiki[*wiki*] — step-by-step help,
+  organised by audience (see `docs/DOCS-MAP.adoc`).

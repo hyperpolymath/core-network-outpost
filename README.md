@@ -1,9 +1,9 @@
 <!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
 # core-network-outpost — a reproducible, dependability-first home-network estate
 
-> **Tested devices:** a community-led list of tested versions lives on the project wiki
-> (link TBC). Please contribute your experience with other devices and I'll look at where
-> things can be remediated.
+> **Tested devices:** a community-led list of tested versions lives on the
+> **[wiki → Tested devices](https://github.com/hyperpolymath/core-network-outpost/wiki/Tested-Devices)**.
+> Please contribute your experience with other devices and I'll look at where things can be remediated.
 
 A self-hosted network estate that scales from a **single-NIC sidecar on a Raspberry Pi 2B** up to
 an **inline gateway on an x86 N100** — split into **two single-minded boxes by *criticality +
@@ -11,7 +11,7 @@ exposure***, so it never becomes a juggernaut that's always-down or the focus of
 
 > **Right-size it to your line.** 2.5GbE is only for gigabit+ inline shaping — most people need
 > one NIC on almost anything. Running a Pi 2B or other old board? Its real limits live in
-> **[`legacy-devices-readme.adoc`](./legacy-devices-readme.adoc)**. Hardware guidance: `HARDWARE.md`.
+> **[`docs/LEGACY-DEVICES.adoc`](./docs/LEGACY-DEVICES.adoc)**. Hardware guidance: `docs/HARDWARE.md`.
 
 ## Core — the dark, always-on box (single-minded per its ethos)
 
@@ -26,7 +26,7 @@ Three honest jobs (four with time), and it refuses to pretend to a fifth:
 | 🏷️ **Stable name** | Dynamic DNS (dyndns2; Dynu as the example) |
 
 Add inline **CAKE shaping** only when the box *is* the gateway (an N100, not a 2B) — **fail-open +
-watchdog** so a shaper fault degrades to pass-through, never to "no internet". See `ARCHITECTURE.md`.
+watchdog** so a shaper fault degrades to pass-through, never to "no internet". See `docs/ARCHITECTURE.md`.
 
 ## Frontier — the exposed, optional, non-critical box
 
@@ -81,11 +81,20 @@ Policy: **`.github/GOVERNANCE.md`** § "Policy 1".
 
 ## Project docs
 
-- **`ARCHITECTURE.md`** — component map, the two-box topology, and the honest fragility read.
-- **`HARDWARE.md`** — right-size to your line (device compatibility catalogue).
-- **`legacy-devices-readme.adoc`** — Pi 2B / old-board limits, honestly.
-- **`docs/INSTALL.md`** — install + caveats. **`roadmap/`** — future sketches (not built).
-- **`.github/GOVERNANCE.md`**, **`MAINTAINERS.md`**, **`CODEOWNERS`** — who decides, who reviews.
+**Step-by-step help lives on the [wiki](https://github.com/hyperpolymath/core-network-outpost/wiki)**,
+organised by audience (users · IndieWebbers · maintainers). The repo holds the reference material:
+
+- **[`docs/EXPLAINME.adoc`](./docs/EXPLAINME.adoc)** — what this is, in plain terms. Start here.
+- **[`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)** — component map, the two-box topology, and the honest fragility read.
+- **[`docs/HARDWARE.md`](./docs/HARDWARE.md)** — right-size to your line (device compatibility catalogue).
+- **[`docs/LEGACY-DEVICES.adoc`](./docs/LEGACY-DEVICES.adoc)** — Pi 2B / old-board limits, honestly.
+- **[`docs/PROFILES.md`](./docs/PROFILES.md)** — `legacy-sbc` vs `modern`, release channels, feature scope.
+- **[`docs/HARDENING.md`](./docs/HARDENING.md)** — security + observability architecture (§0–10).
+- **[`docs/DESIGN-LOG.adoc`](./docs/DESIGN-LOG.adoc)** — every decision and *why*, plus what we learned.
+- **[`docs/MAIL-AUTH.md`](./docs/MAIL-AUTH.md)** — the optional mail-DNS module (not an MTA).
+- **[`docs/INSTALL.md`](./docs/INSTALL.md)** — install + caveats. **[`docs/DOCS-MAP.adoc`](./docs/DOCS-MAP.adoc)** — where everything lives.
+- **`roadmap/`** — future sketches (not built).
+- **`.github/GOVERNANCE.md`**, **`.github/MAINTAINERS.md`**, **`.github/CODEOWNERS`** — who decides, who reviews.
 
 ## Licensing
 

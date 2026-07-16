@@ -6,7 +6,7 @@
 estate (the shaper runs on the x86 N100, so nothing is Pi-bound). Not yet deployed inline;
 awaiting the N100.
 
-This realises **Rung 2** of the estate roadmap (`../roadmap/PI4-AND-BEYOND.md`):
+This realises **Rung 2** of the estate roadmap (`roadmap/PI4-AND-BEYOND.md`):
 an **x86 N100 mini-PC with dual 2.5GbE (Intel i226-V), inline between the Virgin
 Hub and the LAN**, doing `nftables` NAT/routing + **CAKE** smart-queue shaping.
 
@@ -85,7 +85,7 @@ cake-shaper status                           # verify qdiscs are attached
    the rates 5 % at a time until the under-load latency line is flat (grade **A/A+**).
 4. Leave `link-quality-monitor.sh` running so the setting stays honest for all time.
 
-See `../roadmap/PI4-AND-BEYOND.md` for the hardware ladder and the graceful demotion of the 2B.
+See `roadmap/PI4-AND-BEYOND.md` for the hardware ladder and the graceful demotion of the 2B.
 
 ## Requirements
 

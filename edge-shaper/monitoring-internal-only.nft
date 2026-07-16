@@ -7,7 +7,7 @@
 #
 # DEFENCE IN DEPTH — three independent latches, any one of which is sufficient:
 #   1. PRIMARY:  services bind to the management IP only, never 0.0.0.0/WAN
-#                (see HARDENING.md §5a — a service that isn't listening can't be reached).
+#                (see docs/HARDENING.md §5a — a service that isn't listening can't be reached).
 #   2. THIS FILE: a fail-safe pre-chain that HARD-DROPS monitoring ports from
 #                 anywhere that isn't the management NIC + subnet. Runs at negative
 #                 priority, BEFORE the main firewall, so a mistake in the main chain

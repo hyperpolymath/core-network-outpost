@@ -1,0 +1,107 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2025-2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= Documentation map
+
+Where everything lives. Two homes, one rule:
+
+* *The repo* holds *reference* — the durable truth: what it is, why it's built this way,
+  and the config that proves it. Versioned with the code it describes.
+* *The wiki* holds *help* — task-first, audience-first, safe to reword often. Its source
+  lives in `wiki/` in this repo and is published to the GitHub wiki, so it's reviewed and
+  versioned like everything else (see <<wiki-source>>).
+
+Legend: ✅ done · ⚠️ needs an update · ▢ planned.
+
+== In the repo (reference + reproducible truth)
+
+[cols="2,3,1"]
+|===
+|Doc |For |Status
+
+|`README.md` |everyone — the map |✅
+|`docs/EXPLAINME.adoc` |the interested newcomer |✅
+|`docs/ARCHITECTURE.md` |how it fits + honest fragility read |✅
+|`docs/DESIGN-LOG.adoc` |~40 decisions, rationale + key learnings |✅
+|`docs/HARDENING.md` |security + observability architecture (§0–10) |✅
+|`docs/PROFILES.md` |builds, release channels, feature scope |✅
+|`docs/HARDWARE.md` |right-size to your line |✅
+|`docs/LEGACY-DEVICES.adoc` |Pi 2B / old boards, honestly |✅
+|`docs/MAIL-AUTH.md` |optional mail-DNS module |✅
+|`docs/INSTALL.md` |install + caveats |✅
+|`dependability/` |dependability-first configs (chrony, watchdog, RO-root, healthcheck) |✅
+|`edge-shaper/` |inline CAKE shaper configs — deploy on the N100 |✅
+|`wiki/` |the wiki's source of truth (see <<wiki-source>>) |✅
+|`roadmap/`, `.github/` |futures (not built), governance |✅
+|===
+
+NOTE: `README.md` is the only doc at the repo root — everything else lives under `docs/`.
+The design-staging phase is complete: the standalone `edge-shaper` repo was folded in here
+and archived.
+
+== The wiki — three tracks
+
+All pages are written. Each carries an honest status banner (*Built* / *Draft config* /
+*Designed, not built* / *Sketch*) so nobody follows instructions for something that isn't
+real yet.
+
+=== 👤 Users (support) — plain-language, task-first
+* `Getting-Started` — the *Core* on a spare device ✅
+* `Right-Size-Your-Box` — 2.5GbE is only for gigabit+ ✅
+* `Tested-Devices` — the community catalogue (linked from `README.md`) ✅
+* `Troubleshooting` — symptom-first, incl. the *diagnostic-bundle* export ✅
+* `Site-Hijacked-Recovery` — *"your site's been hijacked"*, in order ✅
+* `Reputation-Hygiene` — Safe Browsing / SmartScreen; staying off blocklists ✅
+
+=== 🕸️ IndieWebbers (the special extra)
+* `IndieWeb-Make-Your-Page` — accessible, WCAG-AAA-capable, no Node (*Ddraig*) ✅
+* `IndieWeb-Publish` — Cloudflare Pages: free, likely green-hosted ✅
+* `IndieWeb-Domain-And-Mail-DNS` — your own domain + SPF/DKIM/DMARC done right ✅
+* `IndieWeb-Findable-And-Trusted` — `security.txt`, sitemap, Search Console ✅
+
+=== 🛠️ Developers / platform maintainers (incl. Frontier)
+* `Estate-Architecture` — the two-box estate, channels (`main`/`alpha`), *modules* ✅
+* `Frontier-Modules` — SPA/SDP, the ODoH pool, the bastion, full observability ✅
+* `Recovery-As-Code` — *Bustfiles* + `network-ambulance` ✅
+* `LLM-Legibility` — the diagnostic bundle, `0-AI-MANIFEST` ✅
+* `Contributing-And-Governance` — the pin/bump flow · OpenSSF ✅
+
+[[wiki-source]]
+== Wiki source of truth — `wiki/`, not the web UI
+
+A GitHub wiki is a *separate git repo*: outside this repo's review, history, and backups,
+and editable out-of-band. For a *security* appliance that's the wrong default — a wiki page
+is exactly where someone would slip in a malicious `curl … | sh`.
+
+So *`wiki/` in this repo is the source of truth* and `bin/wiki-sync.sh` publishes it. Edits
+go through a normal PR. `Home` says so, and the wiki should be set to *restrict editing to
+collaborators* (Settings → Features → Wikis).
+
+[source,sh]
+----
+sh bin/wiki-sync.sh --check   # diff repo vs published wiki, change nothing
+sh bin/wiki-sync.sh           # publish wiki/ to the GitHub wiki
+----
+
+== Reference convention (what `bin/check-doc-links.sh` enforces)
+
+[cols="1,1,2"]
+|===
+|Kind |Resolved from |Example
+
+|Clickable link — `+[text](path)+` / `+link:path[]+`
+|*the file it sits in* — that's what GitHub follows
+|`+[.github/GOVERNANCE.md](../../.github/GOVERNANCE.md)+`
+
+|Prose mention — `+`<dir>/<file>.md`+`
+|*the repo root*
+|`+`docs/HARDENING.md`+`
+|===
+
+Root-relative prose survives the *referring* file being moved; `../` in prose doesn't —
+which is precisely what broke when these docs moved into `docs/`. Run the checker before
+committing any move:
+
+[source,sh]
+----
+sh bin/check-doc-links.sh   # exit 1 if any reference is dead
+----

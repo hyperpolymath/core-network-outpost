@@ -121,7 +121,7 @@ files —
     from the same team). Free tier: **4 req/min · 500/day · ~15.5K/month · non-commercial only**.
     **Opt-in, bring-your-own-key, off by default**: it sends file hashes to a Google-owned third
     party (against the no-phone-home ethos), the non-commercial terms would bite business users, and
-    it needs internet + a per-user key. **Prefer local YARA** (private, offline, unlimited). See PROFILES.md.
+    it needs internet + a per-user key. **Prefer local YARA** (private, offline, unlimited). See docs/PROFILES.md.
 
 - `clamd`'s signature DB is ~1–2 GB resident → **infeasible on the 1 GB 2B**.
 - **Decision C — what would it even scan?** AV on a pure DNS/router node with no

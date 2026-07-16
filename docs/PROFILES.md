@@ -26,7 +26,7 @@ Everything in `legacy-sbc`, plus the heavier layers:
 - Base: **Wolfi / aarch64** or **x86**
 
 ## Design principles that cut across both
-- **IPv6-first** where the ISP provides it (see HARDENING.md) — but default-deny must
+- **IPv6-first** where the ISP provides it (see docs/HARDENING.md) — but default-deny must
   treat v6 as first-class, since there's no NAT to hide behind.
 - The 2B keeps working forever as the sinkhole even after a `modern` box takes
   routing + shaping — the roadmap's "suggested split".

@@ -4,7 +4,7 @@
 Runs `bin/canary.sh` on a schedule. It only **reports** (a new AdGuard Home
 release exists, or the pinned digest drifted at source) — it **never applies** an
 upgrade. Applying stays a deliberate maintainer action (`bin/bump.sh --apply`).
-See [`../../.github/GOVERNANCE.md`](../../.github/GOVERNANCE.md) § "Policy 1".
+See [`.github/GOVERNANCE.md`](../../.github/GOVERNANCE.md) § "Policy 1".
 
 Runs on **owned compute** (the Pi itself, or your host) — deliberately **not**
 GitHub Actions, per the estate's $0-Actions / run-local posture.
