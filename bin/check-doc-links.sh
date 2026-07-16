@@ -20,7 +20,10 @@ cd "$(dirname "$0")/.." || exit 1
 repo=$(pwd -P)
 fail=0
 
-scan=$(git ls-files | grep -E '\.(md|adoc|sh|nft|service|timer|conf|ya?ml|example|in)$')
+# Skip this script: its own comments contain illustrative paths (`docs/X.md`,
+# link:path.adoc[]) that are examples of the convention, not references to files.
+scan=$(git ls-files | grep -E '\.(md|adoc|sh|nft|service|timer|conf|ya?ml|example|in)$' \
+       | grep -v '^bin/check-doc-links\.sh$')
 
 for f in $scan; do
   dir=$(dirname "$f")
