@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2025-2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+#
+# Applies CAKE at boot and keeps it applied. qdiscs are lost if the WAN link
+# flaps, so also drop a networkd-dispatcher/ifupdown hook that runs
+# `cake-shaper restart` on WAN up (see README follow-ups).
+[Unit]
+Description=Inline CAKE SQM shaper (Virgin/DOCSIS edge)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+Environment=ENV_FILE=/etc/edge-shaper/.env
+ExecStart=/usr/local/sbin/cake-shaper start
+ExecStop=/usr/local/sbin/cake-shaper stop
+
+[Install]
+WantedBy=multi-user.target

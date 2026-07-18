@@ -1,0 +1,147 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2025-2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= Design log — core-network-outpost
+:toc: left
+:toclevels: 2
+
+A running record of the *decisions* and *why*, plus the *non-obvious things learned*.
+Format per entry: *Decision* — rationale _(→ what we learned, where notable)_. Promote
+the load-bearing entries to formal ADRs in `docs/decisions/` over time.
+
+== 1. Traffic shaping & performance
+
+* *Inline CAKE, not cFosSpeed.* The right fix for lag is Smart-Queue shaping at the true
+  bottleneck, not a per-PC Windows shaper. _(→ cFosSpeed is Windows-only, single-machine,
+  and now a third-party-maintained kernel driver; CAKE covers every device, permanently.)_
+* *The enemy is bufferbloat (latency **under load**), not idle latency.* Idle was already
+  ~12 ms / <1 ms jitter / 0 % loss on the line. _(→ measure under load — waveform test —
+  before "optimising" anything; idle numbers hide the real problem.)_
+* *DOCSIS-tuned CAKE:* `docsis` overhead, `ack-filter` (download-priority on asymmetric cable),
+  per-host fairness, ingress via IFB, rates ≈ 85 % down / 90 % up of *measured*.
+* *"Download before upload"* is really "stop a busy upload bloating the download's ACK path" —
+  `ack-filter` + conservative egress, not a strict cross-direction scheduler.
+
+== 2. Hardware & sizing
+
+* *CAKE is essentially single-threaded* → per-core CPU is what matters. _(→ Pi 4 ~350–500 Mbit,
+  Pi 5 ~600–900, Jetson/Pi 3 lower; none clear a gigabit. N100 does 1–2.5 Gbit.)_
+* *Gigabit inline → N100 + 2× Intel i226-V 2.5GbE.* Base N100 is enough; spend on the NICs
+  (i226-V, not Realtek), not cores.
+* *Right-size to the line — 2.5GbE is NOT a baseline.* Sub-gig → 1GbE (a Pi 4 copes); VDSL →
+  onboard 1GbE (a 2B is fine); 5G/4G-home/hotspot → often can't bridge → *sidecar mode*, and the
+  mobile radio is the bottleneck anyway. _(→ most people need one NIC on almost anything.)_
+* *The Pi 2B is a sidecar, never the inline router* — 100 Mbit NIC on the USB 2.0 bus.
+* *Jetson is the wrong tool* — its GPU can't run CAKE and its A57 CPU is weaker than a Pi 4.
+
+== 3. Topology & dependability
+
+* *Priority order: dependability > security > maintainability/accessibility > features.*
+  _(→ undependable security is dangerous; an undependable box gets ditched and the user loses
+  every benefit.)_
+* *Two single-minded boxes, split by criticality + exposure — never one juggernaut.* *Core*
+  (dark, always-on, holds the keys, exposes ~nothing) vs *Frontier* (exposed, optional,
+  non-critical; its failure/compromise can't reach Core). _(→ blast-radius reduction +
+  failure-domain isolation + separate-the-valuable-from-the-exposed.)_
+* *Release channels = stability; modules = features (orthogonal).* `main` = Core only; `alpha`
+  = + Frontier. No third `beta` channel — use opt-in modules that mature in `alpha` and graduate
+  to `main` default-off. _(→ a channel triples solo maintenance; a feature flag doesn't.)_
+* *An inline router can't be "inherently safe" (it's in the path) — make it **fail-safe**:*
+  fail-open (die → pass-through, never "no internet") + watchdog + a ~60 s physical bypass.
+* *Self-healing + recovery-as-code ("Bustfiles") wrapping `network-ambulance`* — the antidote
+  to inline-router fragility.
+* *An N100 removes the **resource** limit, not the **maintenance-time** or **attack-surface**
+  cost.* _(→ curate by "worth maintaining + exposing", not "can it run".)_
+
+== 4. Security architecture
+
+* *Time (chrony) is foundational* — TLS, DNSSEC, SPA replay windows, logs all fail silently on
+  bad time. NTS-authenticated, multi-source, router as a low-trust cross-check, LAN-served; DS3231
+  RTC on the 2B. _(→ chrony over NTPsec for an intermittent/no-RTC appliance; NTS is the security.)_
+* *Default-deny firewall + a stateless WAN pre-drop* (bogons/bad-flags → protects the conntrack
+  table from exhaustion) *+ SPA-authenticated timeout-set pinholes only*; ALG helpers off.
+* *SPA/SDP is the one genuinely "scary" piece* — complex, and the only lockout failure mode.
+  Opt-in module + always a LAN break-glass path.
+* *Encryption at rest = encrypt the **secrets**, not a keyless box naively.* TPM2 auto-unlock
+  (N100) / clevis+tang network-bound (Pi) so unattended reboot survives and a stolen device
+  off-LAN is useless. Read-only-root shrinks what's even at rest.
+* *ClamAV → AIDE + rkhunter.* On a dark appliance you want *tamper-detection*, not
+  download-scanning. _(→ far lighter than a 1–2 GB resident AV DB, and pointed at the real threat.)_
+* *Preventive "SpywareBlaster" model:* denylists (AdGuard domains + nftables IP threat-feeds) +
+  read-only-root + digest-pins — data + updates, no resident scanner.
+* *You're never the only layer* (router, endpoints, Cloudflare, the pool). _(→ don't reimplement
+  a layer you get for free; AdGuard Home is DNS-level blocking, **not** DPI.)_
+* *Static sites structurally can't be hijacked-and-redirected* — no CMS/plugin/admin/API/password
+  to steal. _(→ the friend's "redirected to a spam site" hack simply can't happen here.)_
+* *Reputation: "never get on" beats "get off".* Proactive Safe-Browsing/SmartScreen standing +
+  good mail-auth + don't send from residential IPs; delisting is brutal.
+* *SSH tarpits (endlessh) + port-rotation — skip.* SPA (a dark port) beats both.
+
+== 5. Observability
+
+* *Prometheus is the heaviest/most-complex component* — but it's Frontier, exporters-only on
+  Core, and swappable (VictoriaMetrics / Netdata). Never a TSDB on the 2B.
+* *Regular users get observability free from AdGuard's own dashboard* ("use what it outputs") +
+  an optional tiny status TUI/CLI. Heavy stack = `alpha` only.
+* *Config → git; metrics → Prometheus; logs → Loki; live UI → Phoenix.* No config-in-metrics,
+  no new datastore.
+
+== 6. Web, publishing & DNS
+
+* *Bandit (Elixir) kept and **hardened**, not swapped for an SSG* — an SSG *generates*, it doesn't
+  *serve*. Dynamic surfaces → Phoenix/Bandit; static → `Plug.Static` with **enforced** guard rails
+  (HTTPS-only, HSTS, strict CSP blocking plugins + mixed-content) — _(→ config walls off the
+  footgun; an "at your own risk" note doesn't.)_
+* *Ddraig as the blessed SSG* — Idris 2 (already load-bearing → no added language), WCAG-2.2-AAA,
+  dogfoods the ecosystem; *using* it is just Markdown. Serve **off-box** (Cloudflare Pages, free,
+  likely green). SSG choice is goal-dependent (Zola/Hugo for broad adoption; Ddraig for ecosystem).
+* *Setup = a TUI/CLI, not a web form* — no listening socket, zero network surface; emits
+  config-as-code. Gains an `export diagnostics` command (read-only, LLM-ready, secret-sanitised
+  bundle the user chooses to share).
+* *Authoritative DNS → Cloudflare (free), never self-hosted.* _(→ self-hosting DNSSEC on a dark
+  box is a whole-domain-down footgun + a public surface.)_
+* *Mail-auth module = the DNS-auth **layer**, NOT an MTA.* SPF/DKIM/DMARC/MTA-STS/DANE/DNSSEC,
+  published via OpenTofu → Cloudflare. No PTR / no home-sending (ISP-owned + Virgin blocks :25).
+  Low-risk flagship half = ingest DMARC reports into the dashboard.
+* *ODoH stub is easy (dnscrypt-proxy); the relay/pool is the hard, community part* (Tier-4).
+* *PTP / MQTT / IoT-hub — out of scope* (that's Home Assistant, a different appliance).
+
+== 7. Tooling, languages & data
+
+* *No embedded LLM.* Local = RAM/CPU contention + too weak; cloud = privacy; a write-capable LLM
+  on a security box is prompt-injectable (via the logs it reads) and non-deterministic. _(→ instead
+  make the box **legible** to the user's own LLM; repair stays deterministic — Bustfiles/Prometheus
+  rules — an LLM may author a recipe, never execute on Core.)_
+* *OpenTofu, not Terraform* — HashiCorp relicensed Terraform to BUSL 1.1 (source-available,
+  anti-compete). OpenTofu is the MPL-2.0 LF fork, drop-in.
+* *No external datastore (Redis/Dragonfly/LMDB).* No workload — AdGuard caches DNS in-process, the
+  dashboard uses ETS. LMDB in Elixir = a NIF (crash-VM risk). If persistence is ever needed →
+  BEAM-native (CubDB/DETS) or Ecto+SQLite, not Postgres.
+* *No Ecto by design* — no relational workload (metrics/logs live in Prometheus/Loki/ETS).
+* *SNIFs not NIFs* (their WASM-sandboxed safe-NIFs) *if* native compute is ever needed — but this
+  estate needs none.
+
+== 8. Licensing, community & sustainability
+
+* *MPL-2.0 **is** GPL-compatible* (the incompatibility was MPL **1.1**). Files don't carry the
+  Exhibit-B "Incompatible With Secondary Licenses" notice; AdGuard (GPLv3) runs as a separate
+  container = mere aggregation, not a derivative.
+* *OpenSSF Best Practices badge + Scorecard* — worth pursuing for a security appliance on offer.
+* *Reputation tiers:* Google Safe Browsing + Microsoft SmartScreen (browser/OS-native, reach
+  everyone) headline; Norton/Gen Digital tier 2 (large but opt-in). _("appears in a tool" ≠ impact.)_
+* *Sustainability, claimed honestly:* reuse / embodied-carbon ("the greenest box is one you already
+  own") + ~10 W operation + frugality/access — distinct from certified GWF "green hosting"
+  (renewable energy). Don't greenwash.
+
+== Key learnings (the highlight reel)
+
+. CAKE is single-threaded → hardware choice is about *single-core speed*, not cores/RAM/GPU.
+. *Time* is a hidden security dependency — get it authenticated and dependable first.
+. Split by *criticality + exposure*, and the whole "juggernaut / always-down / attack magnet" fear
+  dissolves — the complexity becomes *elective*.
+. An N100 removes the *resource* excuse but not the *time* or *surface* cost — that reframes every
+  "should we add X?".
+. *Static* isn't just "smaller surface" — it's "structurally can't be hijacked and redirected".
+. "Never get on a blocklist" beats "get off one"; and don't send mail from a residential IP, ever.
+. MPL-2.0 ≠ MPL-1.1 for GPL compatibility.
+. Make the box *legible to the user's LLM*; never give an LLM the keys.
+. Embodied carbon (manufacturing) often beats operational energy — *reuse* is the real green win.

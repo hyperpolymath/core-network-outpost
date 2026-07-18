@@ -1,0 +1,49 @@
+#!/usr/sbin/nft -f
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2025-2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+#
+# monitoring-internal-only.nft — observability (Prometheus/Loki/dashboard/exporters)
+# reachable ONLY from the trusted management segment, by construction.
+#
+# DEFENCE IN DEPTH — three independent latches, any one of which is sufficient:
+#   1. PRIMARY:  services bind to the management IP only, never 0.0.0.0/WAN
+#                (see docs/HARDENING.md §5a — a service that isn't listening can't be reached).
+#   2. THIS FILE: a fail-safe pre-chain that HARD-DROPS monitoring ports from
+#                 anywhere that isn't the management NIC + subnet. Runs at negative
+#                 priority, BEFORE the main firewall, so a mistake in the main chain
+#                 cannot accidentally expose monitoring. `drop` is terminal.
+#   3. OPTIONAL: an `ether saddr` MAC latch — belt-and-braces only.
+#
+# Ship this ENABLED. A forker who wants remote access removes it and adds their own
+# WireGuard/Twingate resource — an explicit, deliberate act, never the default.
+
+define WAN       = "enp1s0"                 # never a path to monitoring
+define MGMT_IF   = "enp2s0"                 # dedicated management NIC / VLAN
+define MGMT_NET  = 192.168.10.0/24          # trusted management subnet
+# grafana 3000, loki 3100, phoenix 4000, prometheus 9090, node_exporter 9100
+define MON_PORTS = { 3000, 3100, 4000, 9090, 9100 }
+
+# OPTIONAL MAC latch. SPOOFABLE and L2-only — NOT a security boundary, just an extra
+# catch. Prefer a dedicated management VLAN as the real control. Leave commented to skip.
+# define MON_MACS = { 00:11:22:33:44:55 }
+
+table inet mon_lockdown {
+    chain prein {
+        type filter hook input priority -10; policy accept;   # before main (priority 0)
+
+        # Hard-drop any monitoring port that did NOT arrive on the management NIC…
+        iifname != $MGMT_IF tcp dport $MON_PORTS drop
+        iifname != $MGMT_IF udp dport $MON_PORTS drop
+
+        # …or that arrived on it but from outside the management subnet.
+        iifname $MGMT_IF ip saddr != $MGMT_NET tcp dport $MON_PORTS drop
+        iifname $MGMT_IF ip saddr != $MGMT_NET udp dport $MON_PORTS drop
+
+        # Optional MAC latch (uncomment the define + this pair):
+        # iifname $MGMT_IF ether saddr != $MON_MACS tcp dport $MON_PORTS drop
+
+        # Legit mgmt→monitoring falls through (accept) to the MAIN chain, which must
+        # then explicitly accept it — e.g. in your main default-drop input chain add:
+        #   iifname $MGMT_IF ip saddr $MGMT_NET tcp dport $MON_PORTS accept
+    }
+}

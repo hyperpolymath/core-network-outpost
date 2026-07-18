@@ -1,0 +1,49 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2025-2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= Legacy devices — Raspberry Pi 2B and similar boards
+
+The estate's `legacy-sbc` profile runs happily on old boards for its core, always-on jobs.
+This page is the honest ceiling — so nobody deploys a 2B expecting it to be the gigabit router.
+
+== The Pi 2B ceiling
+
+[cols="1,3"]
+|===
+|Constraint |Consequence
+
+|ARMv7 / 32-bit
+|**No Wolfi** (x86_64 + aarch64 only) → **Alpine armv7** base.
+
+|1 GB RAM
+|Sinkhole + print + firewall + time + monitor only. **No ClamAV** (1–2 GB signature DB),
+ **no local time-series DB** (run exporters only; Prometheus/VictoriaMetrics live on a capable
+ box), no heavy Frontier services.
+
+|100 Mbit NIC on the **USB 2.0 bus**
+|A poor distribution point; **cannot be a credible inline router** — all WAN↔LAN traffic would
+ funnel through one shared USB 2.0 bus. Keep it a **sidecar**, not the gateway.
+
+|No onboard RTC
+|It forgets the time on every power-off. Add a **DS3231** (I²C, ~£3) or at least `fake-hwclock`
+ so the clock never jumps backwards.
+
+|No Wi-Fi radio
+|"Wireless" clients reach the wired Pi via the router.
+
+|SD-card storage
+|Write-heavy workloads chew through cards. Use **read-only root + bounded logging + ship logs
+ off-box**, or the card wears out.
+|===
+
+== What the 2B is genuinely great at
+
+The **DNS sinkhole** (its ideal fit), **print server**, **host firewall**, **DDNS**, **time**,
+and the **link-quality monitor** — the dependable, boring, always-on **Core** (sidecar mode,
+single NIC). That is the point: a single-minded box that just works and never becomes a juggernaut.
+
+== Moving up
+
+When you outgrow it, the ladder — **Pi 4/5 (aarch64) → x86 N100** — is in
+`roadmap/PI4-AND-BEYOND.md`. On 64-bit, **Wolfi** becomes possible and the **inline gateway +
+Frontier** roles open up. Match the hardware to your line speed (`docs/HARDWARE.md`); 2.5GbE is only
+for gigabit+ inline shaping, not a baseline.

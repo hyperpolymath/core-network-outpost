@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2025-2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+# /etc/systemd/system/adguard-healthcheck.service  (Debian/systemd hosts, e.g. N100)
+# Alpine/OpenRC 2B: run the script from cron instead — see dependability/README.md.
+# VALIDATE:  systemd-analyze verify adguard-healthcheck.service
+[Unit]
+Description=AdGuard Home DNS liveness self-heal
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/adguard-healthcheck.sh
+TimeoutStartSec=30
+# Environment=CONTAINER=adguardhome RESOLVER=127.0.0.1
